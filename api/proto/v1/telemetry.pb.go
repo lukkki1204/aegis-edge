@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.12
 // 	protoc        v3.21.12
-// source: telemetry.proto
+// source: api/proto/v1/telemetry.proto
 
 package v1
 
@@ -29,6 +29,7 @@ type DeviceMessage struct {
 	//
 	//	*DeviceMessage_Telemetry
 	//	*DeviceMessage_Alert
+	//	*DeviceMessage_Pong
 	Payload       isDeviceMessage_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -36,7 +37,7 @@ type DeviceMessage struct {
 
 func (x *DeviceMessage) Reset() {
 	*x = DeviceMessage{}
-	mi := &file_telemetry_proto_msgTypes[0]
+	mi := &file_api_proto_v1_telemetry_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -48,7 +49,7 @@ func (x *DeviceMessage) String() string {
 func (*DeviceMessage) ProtoMessage() {}
 
 func (x *DeviceMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_telemetry_proto_msgTypes[0]
+	mi := &file_api_proto_v1_telemetry_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -61,7 +62,7 @@ func (x *DeviceMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeviceMessage.ProtoReflect.Descriptor instead.
 func (*DeviceMessage) Descriptor() ([]byte, []int) {
-	return file_telemetry_proto_rawDescGZIP(), []int{0}
+	return file_api_proto_v1_telemetry_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *DeviceMessage) GetDeviceId() string {
@@ -103,6 +104,15 @@ func (x *DeviceMessage) GetAlert() *AlertEvent {
 	return nil
 }
 
+func (x *DeviceMessage) GetPong() *PongEvent {
+	if x != nil {
+		if x, ok := x.Payload.(*DeviceMessage_Pong); ok {
+			return x.Pong
+		}
+	}
+	return nil
+}
+
 type isDeviceMessage_Payload interface {
 	isDeviceMessage_Payload()
 }
@@ -115,9 +125,15 @@ type DeviceMessage_Alert struct {
 	Alert *AlertEvent `protobuf:"bytes,4,opt,name=alert,proto3,oneof"`
 }
 
+type DeviceMessage_Pong struct {
+	Pong *PongEvent `protobuf:"bytes,5,opt,name=pong,proto3,oneof"`
+}
+
 func (*DeviceMessage_Telemetry) isDeviceMessage_Payload() {}
 
 func (*DeviceMessage_Alert) isDeviceMessage_Payload() {}
+
+func (*DeviceMessage_Pong) isDeviceMessage_Payload() {}
 
 type TelemetryData struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
@@ -131,7 +147,7 @@ type TelemetryData struct {
 
 func (x *TelemetryData) Reset() {
 	*x = TelemetryData{}
-	mi := &file_telemetry_proto_msgTypes[1]
+	mi := &file_api_proto_v1_telemetry_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -143,7 +159,7 @@ func (x *TelemetryData) String() string {
 func (*TelemetryData) ProtoMessage() {}
 
 func (x *TelemetryData) ProtoReflect() protoreflect.Message {
-	mi := &file_telemetry_proto_msgTypes[1]
+	mi := &file_api_proto_v1_telemetry_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -156,7 +172,7 @@ func (x *TelemetryData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TelemetryData.ProtoReflect.Descriptor instead.
 func (*TelemetryData) Descriptor() ([]byte, []int) {
-	return file_telemetry_proto_rawDescGZIP(), []int{1}
+	return file_api_proto_v1_telemetry_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *TelemetryData) GetCpuUsagePercent() float64 {
@@ -197,7 +213,7 @@ type AlertEvent struct {
 
 func (x *AlertEvent) Reset() {
 	*x = AlertEvent{}
-	mi := &file_telemetry_proto_msgTypes[2]
+	mi := &file_api_proto_v1_telemetry_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -209,7 +225,7 @@ func (x *AlertEvent) String() string {
 func (*AlertEvent) ProtoMessage() {}
 
 func (x *AlertEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_telemetry_proto_msgTypes[2]
+	mi := &file_api_proto_v1_telemetry_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -222,7 +238,7 @@ func (x *AlertEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AlertEvent.ProtoReflect.Descriptor instead.
 func (*AlertEvent) Descriptor() ([]byte, []int) {
-	return file_telemetry_proto_rawDescGZIP(), []int{2}
+	return file_api_proto_v1_telemetry_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *AlertEvent) GetEventType() string {
@@ -239,6 +255,58 @@ func (x *AlertEvent) GetDescription() string {
 	return ""
 }
 
+type PongEvent struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommandId     string                 `protobuf:"bytes,1,opt,name=command_id,json=commandId,proto3" json:"command_id,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PongEvent) Reset() {
+	*x = PongEvent{}
+	mi := &file_api_proto_v1_telemetry_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PongEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PongEvent) ProtoMessage() {}
+
+func (x *PongEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_telemetry_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PongEvent.ProtoReflect.Descriptor instead.
+func (*PongEvent) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_telemetry_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *PongEvent) GetCommandId() string {
+	if x != nil {
+		return x.CommandId
+	}
+	return ""
+}
+
+func (x *PongEvent) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 type CloudCommand struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	CommandId     string                 `protobuf:"bytes,1,opt,name=command_id,json=commandId,proto3" json:"command_id,omitempty"`
@@ -250,7 +318,7 @@ type CloudCommand struct {
 
 func (x *CloudCommand) Reset() {
 	*x = CloudCommand{}
-	mi := &file_telemetry_proto_msgTypes[3]
+	mi := &file_api_proto_v1_telemetry_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -262,7 +330,7 @@ func (x *CloudCommand) String() string {
 func (*CloudCommand) ProtoMessage() {}
 
 func (x *CloudCommand) ProtoReflect() protoreflect.Message {
-	mi := &file_telemetry_proto_msgTypes[3]
+	mi := &file_api_proto_v1_telemetry_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -275,7 +343,7 @@ func (x *CloudCommand) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CloudCommand.ProtoReflect.Descriptor instead.
 func (*CloudCommand) Descriptor() ([]byte, []int) {
-	return file_telemetry_proto_rawDescGZIP(), []int{3}
+	return file_api_proto_v1_telemetry_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *CloudCommand) GetCommandId() string {
@@ -299,16 +367,17 @@ func (x *CloudCommand) GetParameters() map[string]string {
 	return nil
 }
 
-var File_telemetry_proto protoreflect.FileDescriptor
+var File_api_proto_v1_telemetry_proto protoreflect.FileDescriptor
 
-const file_telemetry_proto_rawDesc = "" +
+const file_api_proto_v1_telemetry_proto_rawDesc = "" +
 	"\n" +
-	"\x0ftelemetry.proto\x12\baegis.v1\"\xbc\x01\n" +
+	"\x1capi/proto/v1/telemetry.proto\x12\baegis.v1\"\xe7\x01\n" +
 	"\rDeviceMessage\x12\x1b\n" +
 	"\tdevice_id\x18\x01 \x01(\tR\bdeviceId\x12\x1c\n" +
 	"\ttimestamp\x18\x02 \x01(\x03R\ttimestamp\x127\n" +
 	"\ttelemetry\x18\x03 \x01(\v2\x17.aegis.v1.TelemetryDataH\x00R\ttelemetry\x12,\n" +
-	"\x05alert\x18\x04 \x01(\v2\x14.aegis.v1.AlertEventH\x00R\x05alertB\t\n" +
+	"\x05alert\x18\x04 \x01(\v2\x14.aegis.v1.AlertEventH\x00R\x05alert\x12)\n" +
+	"\x04pong\x18\x05 \x01(\v2\x13.aegis.v1.PongEventH\x00R\x04pongB\t\n" +
 	"\apayload\"\xbf\x01\n" +
 	"\rTelemetryData\x12*\n" +
 	"\x11cpu_usage_percent\x18\x01 \x01(\x01R\x0fcpuUsagePercent\x12*\n" +
@@ -319,7 +388,11 @@ const file_telemetry_proto_rawDesc = "" +
 	"AlertEvent\x12\x1d\n" +
 	"\n" +
 	"event_type\x18\x01 \x01(\tR\teventType\x12 \n" +
-	"\vdescription\x18\x02 \x01(\tR\vdescription\"\xcc\x01\n" +
+	"\vdescription\x18\x02 \x01(\tR\vdescription\"D\n" +
+	"\tPongEvent\x12\x1d\n" +
+	"\n" +
+	"command_id\x18\x01 \x01(\tR\tcommandId\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"\xcc\x01\n" +
 	"\fCloudCommand\x12\x1d\n" +
 	"\n" +
 	"command_id\x18\x01 \x01(\tR\tcommandId\x12\x16\n" +
@@ -334,62 +407,65 @@ const file_telemetry_proto_rawDesc = "" +
 	"\aConnect\x12\x17.aegis.v1.DeviceMessage\x1a\x16.aegis.v1.CloudCommand(\x010\x01B2Z0github.com/twojanazwa/aegis-edge/api/proto/v1;v1b\x06proto3"
 
 var (
-	file_telemetry_proto_rawDescOnce sync.Once
-	file_telemetry_proto_rawDescData []byte
+	file_api_proto_v1_telemetry_proto_rawDescOnce sync.Once
+	file_api_proto_v1_telemetry_proto_rawDescData []byte
 )
 
-func file_telemetry_proto_rawDescGZIP() []byte {
-	file_telemetry_proto_rawDescOnce.Do(func() {
-		file_telemetry_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_telemetry_proto_rawDesc), len(file_telemetry_proto_rawDesc)))
+func file_api_proto_v1_telemetry_proto_rawDescGZIP() []byte {
+	file_api_proto_v1_telemetry_proto_rawDescOnce.Do(func() {
+		file_api_proto_v1_telemetry_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_api_proto_v1_telemetry_proto_rawDesc), len(file_api_proto_v1_telemetry_proto_rawDesc)))
 	})
-	return file_telemetry_proto_rawDescData
+	return file_api_proto_v1_telemetry_proto_rawDescData
 }
 
-var file_telemetry_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
-var file_telemetry_proto_goTypes = []any{
+var file_api_proto_v1_telemetry_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_api_proto_v1_telemetry_proto_goTypes = []any{
 	(*DeviceMessage)(nil), // 0: aegis.v1.DeviceMessage
 	(*TelemetryData)(nil), // 1: aegis.v1.TelemetryData
 	(*AlertEvent)(nil),    // 2: aegis.v1.AlertEvent
-	(*CloudCommand)(nil),  // 3: aegis.v1.CloudCommand
-	nil,                   // 4: aegis.v1.CloudCommand.ParametersEntry
+	(*PongEvent)(nil),     // 3: aegis.v1.PongEvent
+	(*CloudCommand)(nil),  // 4: aegis.v1.CloudCommand
+	nil,                   // 5: aegis.v1.CloudCommand.ParametersEntry
 }
-var file_telemetry_proto_depIdxs = []int32{
+var file_api_proto_v1_telemetry_proto_depIdxs = []int32{
 	1, // 0: aegis.v1.DeviceMessage.telemetry:type_name -> aegis.v1.TelemetryData
 	2, // 1: aegis.v1.DeviceMessage.alert:type_name -> aegis.v1.AlertEvent
-	4, // 2: aegis.v1.CloudCommand.parameters:type_name -> aegis.v1.CloudCommand.ParametersEntry
-	0, // 3: aegis.v1.AegisService.Connect:input_type -> aegis.v1.DeviceMessage
-	3, // 4: aegis.v1.AegisService.Connect:output_type -> aegis.v1.CloudCommand
-	4, // [4:5] is the sub-list for method output_type
-	3, // [3:4] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	3, // 2: aegis.v1.DeviceMessage.pong:type_name -> aegis.v1.PongEvent
+	5, // 3: aegis.v1.CloudCommand.parameters:type_name -> aegis.v1.CloudCommand.ParametersEntry
+	0, // 4: aegis.v1.AegisService.Connect:input_type -> aegis.v1.DeviceMessage
+	4, // 5: aegis.v1.AegisService.Connect:output_type -> aegis.v1.CloudCommand
+	5, // [5:6] is the sub-list for method output_type
+	4, // [4:5] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
-func init() { file_telemetry_proto_init() }
-func file_telemetry_proto_init() {
-	if File_telemetry_proto != nil {
+func init() { file_api_proto_v1_telemetry_proto_init() }
+func file_api_proto_v1_telemetry_proto_init() {
+	if File_api_proto_v1_telemetry_proto != nil {
 		return
 	}
-	file_telemetry_proto_msgTypes[0].OneofWrappers = []any{
+	file_api_proto_v1_telemetry_proto_msgTypes[0].OneofWrappers = []any{
 		(*DeviceMessage_Telemetry)(nil),
 		(*DeviceMessage_Alert)(nil),
+		(*DeviceMessage_Pong)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_telemetry_proto_rawDesc), len(file_telemetry_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_proto_v1_telemetry_proto_rawDesc), len(file_api_proto_v1_telemetry_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_telemetry_proto_goTypes,
-		DependencyIndexes: file_telemetry_proto_depIdxs,
-		MessageInfos:      file_telemetry_proto_msgTypes,
+		GoTypes:           file_api_proto_v1_telemetry_proto_goTypes,
+		DependencyIndexes: file_api_proto_v1_telemetry_proto_depIdxs,
+		MessageInfos:      file_api_proto_v1_telemetry_proto_msgTypes,
 	}.Build()
-	File_telemetry_proto = out.File
-	file_telemetry_proto_goTypes = nil
-	file_telemetry_proto_depIdxs = nil
+	File_api_proto_v1_telemetry_proto = out.File
+	file_api_proto_v1_telemetry_proto_goTypes = nil
+	file_api_proto_v1_telemetry_proto_depIdxs = nil
 }

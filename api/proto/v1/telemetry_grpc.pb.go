@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.2
 // - protoc             v3.21.12
-// source: telemetry.proto
+// source: api/proto/v1/telemetry.proto
 
 package v1
 
@@ -115,5 +115,5 @@ var AegisService_ServiceDesc = grpc.ServiceDesc{
 			ClientStreams: true,
 		},
 	},
-	Metadata: "telemetry.proto",
+	Metadata: "api/proto/v1/telemetry.proto",
 }

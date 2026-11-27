@@ -9,6 +9,7 @@ import (
 	"sync"
 )
 
+// cpuTicks contains fields necessary to calculate cpu usage.
 type cpuTicks struct {
 	idle  uint64
 	total uint64
@@ -29,7 +30,7 @@ func NewSampler() *Sampler {
 	}
 }
 
-// Temperature does not have same path for different devices, it has to be found
+// Temperature does not have same path for different devices, it has to be found.
 func findThermalZonePath() string {
 	matches, err := filepath.Glob("/sys/class/thermal/thermal_zone*/temp")
 	if err != nil || len(matches) == 0 {
@@ -149,6 +150,7 @@ func (s *Sampler) TemperatureCelsius() (float32, error) {
 	return float32(milliDegrees) / 1000.0, nil
 }
 
+// UptimeSeconds returns for how long the device is active.
 func (s *Sampler) UptimeSeconds() (uint64, error) {
 	data, err := os.ReadFile("/proc/uptime")
 	if err != nil {

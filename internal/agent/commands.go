@@ -9,6 +9,7 @@ import (
 	"github.com/twojanazwa/aegis-edge/internal/agent/transport"
 )
 
+// Commands available that can be sent from gateway to agent
 const (
 	ActionSetInterval = "SET_INTERVAL"
 	ActionPause       = "PAUSE"
@@ -18,6 +19,7 @@ const (
 	ActionPing        = "PING"
 )
 
+// pushLatest pushes always latest value to channel that lenght is 1
 func pushLatest[T any](ch chan T, val T) {
 	select {
 	case ch <- val:
@@ -30,6 +32,7 @@ func pushLatest[T any](ch chan T, val T) {
 	}
 }
 
+// handleCommand depending on what cmd is sent uplods proper channel with proper value
 func (r *Runner) handleCommand(
 	cmd *v1.CloudCommand,
 	pauseCh chan bool,
@@ -63,6 +66,7 @@ func (r *Runner) handleCommand(
 	}
 }
 
+// scheduleRetry sets new backoff and pushes data to reconnectCh after delay
 func (r *Runner) scheduleRetry(
 	stream v1.AegisService_ConnectClient,
 	reconnectCh *<-chan time.Time,
@@ -79,6 +83,7 @@ func (r *Runner) scheduleRetry(
 	return nil
 }
 
+// handleForceFlush calls Flush method immediately on current buffer
 func (r *Runner) handleForceFlush(
 	stream v1.AegisService_ConnectClient,
 	reconnectCh *<-chan time.Time,
@@ -95,6 +100,7 @@ func (r *Runner) handleForceFlush(
 	return stream
 }
 
+// handleReconnectCmd closes stream sets backoff and pushes data to reconnectCh
 func (r *Runner) handleReconnectCmd(
 	stream v1.AegisService_ConnectClient,
 	reconnectCh *<-chan time.Time,
@@ -112,21 +118,24 @@ func (r *Runner) handleReconnectCmd(
 	return nil
 }
 
+// sendPong sends a PONG response over the active gRPC stream in reply to a PING command.
 func (r *Runner) sendPong(writer *streamWriter, cmdID string) {
 	if writer == nil {
 		log.Printf("PING received (cmd=%s), but no active stream to send PONG.", cmdID)
 		return
 	}
+
 	msg := &v1.DeviceMessage{
 		DeviceId:  r.cfg.DeviceID,
 		Timestamp: time.Now().Unix(),
-		Payload: &v1.DeviceMessage_Alert{
-			Alert: &v1.AlertEvent{
-				EventType:   "PONG",
-				Description: fmt.Sprintf("ack command %s", cmdID),
+		Payload: &v1.DeviceMessage_Pong{
+			Pong: &v1.PongEvent{
+				CommandId: cmdID,
+				Message:   "pong",
 			},
 		},
 	}
+
 	if err := writer.Send(msg); err != nil {
 		log.Printf("Failed to send PONG for %s: %v", cmdID, err)
 	}

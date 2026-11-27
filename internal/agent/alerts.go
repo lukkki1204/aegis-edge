@@ -7,12 +7,14 @@ import (
 	v1 "github.com/twojanazwa/aegis-edge/api/proto/v1"
 )
 
+// Treshold values for CPU usage, temperature and used memory.
 const (
-	CPUAlertThreshold  = 1.0
+	CPUAlertThreshold  = 70.0
 	TempAlertThreshold = 70.0
 	MemAlertThreshold  = 500 * 1024 * 1024 // 500 MB
 )
 
+// BuildAlerts takes measured data and if treshold is exceeded "alerts" table is updated
 func (r *Runner) BuildAlerts(
 	cpu float32,
 	mem uint64,

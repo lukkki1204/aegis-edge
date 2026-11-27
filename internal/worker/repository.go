@@ -8,16 +8,19 @@ import (
 	v1 "github.com/twojanazwa/aegis-edge/api/proto/v1"
 )
 
+// Repository provides PostgreSQL persistence for telemetry, alerts, and control events.
 type Repository struct {
 	db *sql.DB
 }
 
+// NewRepository creates a Repository backed by the given SQL database handle.
 func NewRepository(db *sql.DB) *Repository {
 	return &Repository{
 		db: db,
 	}
 }
 
+// LatestTelemetry represents the most recent telemetry reading for a device.
 type LatestTelemetry struct {
 	ID            int64   `json:"id"`
 	DeviceID      string  `json:"device_id"`
@@ -29,6 +32,7 @@ type LatestTelemetry struct {
 	UptimeSeconds int64   `json:"uptime_seconds"`
 }
 
+// AlertRecord represents a stored alert emitted by an edge device.
 type AlertRecord struct {
 	ID          int64  `json:"id"`
 	DeviceID    string `json:"device_id"`
@@ -37,6 +41,7 @@ type AlertRecord struct {
 	Description string `json:"description"`
 }
 
+// SaveMessage persists an incoming protobuf device payload into the matching table.
 func (r *Repository) SaveMessage(msg *v1.DeviceMessage) error {
 	if r == nil || r.db == nil {
 		return fmt.Errorf("repository or db is nil")
@@ -95,6 +100,27 @@ func (r *Repository) SaveMessage(msg *v1.DeviceMessage) error {
 	}
 }
 
+// InsertEvent records a lifecycle or control command event in the events table.
+func (r *Repository) InsertEvent(ctx context.Context, deviceID, eventType, details string) error {
+	if r == nil || r.db == nil {
+		return fmt.Errorf("repository or db is nil")
+	}
+	_, err := r.db.ExecContext(ctx, `
+		INSERT INTO events (
+			device_id,
+			event_type,
+			details
+		)
+		VALUES ($1,$2,$3)
+	`,
+		deviceID,
+		eventType,
+		details,
+	)
+	return err
+}
+
+// GetLatestTelemetry returns the newest telemetry row, optionally filtered by deviceID.
 func (r *Repository) GetLatestTelemetry(ctx context.Context, deviceID string) (*LatestTelemetry, error) {
 	query := `
 		SELECT id, device_id, timestamp, cpu_usage, memory_free, temperature, uptime_seconds
@@ -124,6 +150,7 @@ func (r *Repository) GetLatestTelemetry(ctx context.Context, deviceID string) (*
 	return &item, nil
 }
 
+// GetRecentAlerts returns the newest alerts ordered by descending ID.
 func (r *Repository) GetRecentAlerts(ctx context.Context, limit int) ([]AlertRecord, error) {
 	if limit <= 0 || limit > 200 {
 		limit = 20
@@ -132,7 +159,6 @@ func (r *Repository) GetRecentAlerts(ctx context.Context, limit int) ([]AlertRec
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT id, device_id, timestamp, event_type, description
 		FROM alerts
-		WHERE event_type <> 'PONG'
 		ORDER BY id DESC
 		LIMIT $1
 	`, limit)

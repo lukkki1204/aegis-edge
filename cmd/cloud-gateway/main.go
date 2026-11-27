@@ -1,3 +1,4 @@
+// Package main implements cloud-gateway responsible for communicating with agent.
 package main
 
 import (
@@ -17,6 +18,7 @@ import (
 	"google.golang.org/grpc"
 )
 
+// Constant values used for setting specific command that agent receives.
 const (
 	ActionSetInterval = "SET_INTERVAL"
 	ActionPause       = "PAUSE"
@@ -26,15 +28,18 @@ const (
 	ActionPing        = "PING"
 )
 
+// CommandSender wraps a gRPC stream and serializes outgoing cloud commands.
 type commandSender struct {
 	stream v1.AegisService_ConnectServer
 	mu     sync.Mutex
 }
 
+// Initialization of new commandSender with provided active stream
 func newCommandSender(stream v1.AegisService_ConnectServer) *commandSender {
 	return &commandSender{stream: stream}
 }
 
+// Send method sends command to agent using commandSender
 func (s *commandSender) Send(action string, params map[string]string) error {
 	cmd := &v1.CloudCommand{
 		CommandId:  fmt.Sprintf("cmd-%s-%d", action, time.Now().UnixNano()),
@@ -54,22 +59,41 @@ func (s *commandSender) Send(action string, params map[string]string) error {
 	return nil
 }
 
+// gatewayServer coordinates gRPC agent streams, PostgreSQL persistence, and admin HTTP endpoints.
 type gatewayServer struct {
 	v1.UnimplementedAegisServiceServer
 	processor *worker.Processor
 	repo      *worker.Repository
 	db        interface{ Ping() error }
 
-	mu     sync.RWMutex
-	sender *commandSender
+	mu           sync.RWMutex
+	sender       *commandSender
+	lastDeviceID string
 }
 
+func (s *gatewayServer) setLastDeviceID(deviceID string) {
+	if deviceID == "" {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.lastDeviceID = deviceID
+}
+
+func (s *gatewayServer) getLastDeviceID() string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.lastDeviceID
+}
+
+// setSender sets new command server after starting new stream
 func (s *gatewayServer) setSender(cs *commandSender) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.sender = cs
 }
 
+// clearSender clears active stream
 func (s *gatewayServer) clearSender(cs *commandSender) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -78,12 +102,14 @@ func (s *gatewayServer) clearSender(cs *commandSender) {
 	}
 }
 
+// getSender returns the active commandSender, or nil when no device is connected.
 func (s *gatewayServer) getSender() *commandSender {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.sender
 }
 
+// startAdminHTTP starts the administrative HTTP server for commands (/cmd) and REST status endpoints.
 func (s *gatewayServer) startAdminHTTP(addr string) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/cmd", func(w http.ResponseWriter, r *http.Request) {
@@ -112,6 +138,16 @@ func (s *gatewayServer) startAdminHTTP(addr string) {
 		if err := cs.Send(action, params); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
+		}
+		var details string
+		if action == "SET_INTERVAL" {
+			details = fmt.Sprintf("Command SET_INTERVAL executed, interval changed to %s seconds", params["interval_seconds"])
+		} else {
+			details = fmt.Sprintf("Command %s executed.", action)
+		}
+
+		if err := s.repo.InsertEvent(r.Context(), s.getLastDeviceID(), action, details); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
 		w.WriteHeader(http.StatusOK)
@@ -194,6 +230,9 @@ func (s *gatewayServer) Connect(stream v1.AegisService_ConnectServer) error {
 			log.Printf("Lost connection with edge device (stream error): %v", err)
 			return err
 		}
+		if msg.GetDeviceId() != "" {
+			s.setLastDeviceID(msg.GetDeviceId())
+		}
 
 		switch payload := msg.Payload.(type) {
 		case *v1.DeviceMessage_Telemetry:
@@ -209,6 +248,20 @@ func (s *gatewayServer) Connect(stream v1.AegisService_ConnectServer) error {
 			log.Printf("ALERT [%s]: %s - %s", msg.DeviceId, a.EventType, a.Description)
 			if err := s.processor.Process(msg); err != nil {
 				log.Printf("Failed to process alert: %v", err)
+			}
+		case *v1.DeviceMessage_Pong:
+			p := payload.Pong
+			if p != nil {
+				log.Printf("PONG [%s]: cmd=%s msg=%s", msg.DeviceId, p.CommandId, p.Message)
+				if s.repo != nil {
+					details := p.Message
+					if p.CommandId != "" {
+						details = fmt.Sprintf("cmd=%s msg=%s", p.CommandId, p.Message)
+					}
+					if err := s.repo.InsertEvent(stream.Context(), msg.GetDeviceId(), "PONG", details); err != nil {
+						log.Printf("Failed to insert PONG event: %v", err)
+					}
+				}
 			}
 		}
 	}
